@@ -5,12 +5,14 @@ import { auth, db, storage } from "../firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, setDoc } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
+import validator from 'validator';
 
 
 const Register = () => {
   const [err, setErr] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async(e) => {
     setLoading(true);
@@ -46,7 +48,7 @@ const Register = () => {
 
             //create empty user chats on firestore
             await setDoc(doc(db, "userChats", res.user.uid), {});
-            navigate("/");
+            navigate("/login");
           } catch (err) {
             console.log(err);
             setErr(true);
@@ -60,6 +62,18 @@ const Register = () => {
     }
   }
 
+  const validate = (value) => {
+    if (validator.isStrongPassword(value, {
+      minLength: 8
+    })) {
+      setErrorMessage('Is Strong Password')
+      return true;
+    } else {
+      setErrorMessage('Minimum password length should be 8')
+      return false;
+    }
+  }
+
   return (
     <div className="formContainer">
       <div className="formWrapper">
@@ -67,7 +81,8 @@ const Register = () => {
         <form onSubmit={handleSubmit}>
           <input required type="text" placeholder="Enter your name"/>
           <input required type="email" placeholder="Enter your email"/>
-          <input required type="password" placeholder="Enter your password"/>
+          <input required type="password" placeholder="Enter your password" onChange={(e) => validate(e.target.value)}/>
+          {errorMessage === '' ? null : <span style={{color: 'red',fontSize: "13px"}}>{errorMessage}</span>}
           <input required style={{display:"none"}} type="file" id="file"/>
           <label htmlFor="file">
             <img src={register} alt="" />
